@@ -6,9 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-// TODO add missing decorators for JPA
+// DONE add missing decorators for JPA
+@Entity
+@Table(name = "speler")
 public class Speler {
-
+  @Id
+  @Column(name = "tennisvlaanderenid")
   private int tennisvlaanderenId;
 
   private String naam;
