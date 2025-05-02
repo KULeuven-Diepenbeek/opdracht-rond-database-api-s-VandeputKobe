@@ -14,7 +14,7 @@ public abstract class SpelerRepositoryTest {
   protected final String PWD_OF_TEST_DB = "";
 
   protected SpelerRepository spelerRepository;
-
+  
   @Test
   public void givenNewSpeler_whenAddSpelerToDb_assertThatSpelerIsInDb() {
     // Arrange

@@ -16,8 +16,8 @@ public class ConnectionManager {
   public ConnectionManager(String connectionString, String user, String pwd) {
     try {
       this.connectionString = connectionString;
-      this.connection = (Connection) DriverManager.getConnection(connectionString, user, pwd);
-      connection.setAutoCommit(false);
+      this.connection = DriverManager.getConnection(connectionString, user, pwd);
+      connection.setAutoCommit(false); // Uitschakelen van auto-commit voor gecontroleerde transacties
     } catch (SQLException e) {
       System.out.println("Error connecting to database with connectionstring: " + connectionString + ", and user: "
           + user + ", and the given password.");
@@ -36,8 +36,8 @@ public class ConnectionManager {
 
   public void flushConnection() {
     try {
-      connection.commit();
-      connection.close();
+      connection.commit(); // Zorg ervoor dat de commit echt plaatsvindt
+      connection.close(); // Sluit de verbinding pas na commit
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -45,14 +45,12 @@ public class ConnectionManager {
 
   public void initTables() {
     try {
-      URI path = Objects.requireNonNull(App.class.getClassLoader().getResource("initTableWithDummyData.sql"))
-          .toURI();
+      URI path = Objects.requireNonNull(App.class.getClassLoader().getResource("initTableWithDummyData.sql")).toURI();
       var sql = new String(Files.readAllBytes(Paths.get(path)));
-      // System.out.println(sql);
-      Statement statement = (Statement) connection.createStatement();
-      statement.executeUpdate(sql);
-      statement.close();
-      connection.commit();
+      try (Statement statement = connection.createStatement()) {
+        statement.executeUpdate(sql); // Voer de SQL uit voor het initialiseren van de tabellen
+        connection.commit(); // Commit de veranderingen naar de database
+      }
     } catch (Exception e) {
       System.out.println("An Error occurred when trying to initialize database table");
       e.printStackTrace();
@@ -61,13 +59,11 @@ public class ConnectionManager {
   }
 
   public void verifyTableContentOfInit() {
-    try {
-      Statement statement = (Statement) connection.createStatement();
+    try (Statement statement = connection.createStatement()) {
       var result = statement.executeQuery("SELECT COUNT(*) as cnt FROM speler;");
       while (result.next()) {
-        assert result.getInt("cnt") == 8;
+        assert result.getInt("cnt") == 8; // Controleer of het aantal rijen overeenkomt met de verwachte waarde
       }
-      statement.close();
     } catch (AssertionError a) {
       System.out.println("The assertion of #rows == 8 failed");
       a.printStackTrace();
